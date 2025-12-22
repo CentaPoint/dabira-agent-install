@@ -1,0 +1,26 @@
+# Test the installation page
+curl https://centapoint.github.io/dabira-agent-install/
+
+# Test the install script
+curl -fsSL https://raw.githubusercontent.com/CentaPoint/dabira-agent-install/main/install.sh | bash
+
+# Test the verification script
+curl -fsSL https://raw.githubusercontent.com/CentaPoint/dabira-agent-install/main/verify.sh | bash
+```
+
+
+# Interactive uninstall (with prompts)
+curl -fsSL https://raw.githubusercontent.com/CentaPoint/dabira-agent-install/main/uninstall.sh | bash
+
+# Force uninstall (no prompts)
+curl -fsSL https://raw.githubusercontent.com/CentaPoint/dabira-agent-install/main/uninstall.sh | bash -s -- --force
+
+# Uninstall but keep configuration
+curl -fsSL https://raw.githubusercontent.com/CentaPoint/dabira-agent-install/main/uninstall.sh | bash -s -- --keep-config
+
+# Force uninstall and keep config
+curl -fsSL https://raw.githubusercontent.com/CentaPoint/dabira-agent-install/main/uninstall.sh | bash -s -- --force --keep-config
+
+# Show help
+curl -fsSL https://raw.githubusercontent.com/CentaPoint/dabira-agent-install/main/uninstall.sh | bash -s -- --help
+```
