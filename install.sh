@@ -19,19 +19,31 @@ else
     RED='' GREEN='' YELLOW='' BLUE='' CYAN='' BOLD='' NC=''
 fi
 
+if [ -t 1 ] && [ "${TERM:-}" != "dumb" ]; then
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    BLUE='\033[0;34m'
+    CYAN='\033[0;36m'
+    BOLD='\033[1m'
+    NC='\033[0m'
+else
+    RED='' GREEN='' YELLOW='' BLUE='' CYAN='' BOLD='' NC=''
+fi
+
 print_banner() {
     echo ""
-    echo "${CYAN}╔════════════════════════════════════════════════════════╗${NC}"
-    echo "${CYAN}║${NC}  ${BOLD}Dabira Agent Installer${NC}                             ${CYAN}║${NC}"
-    echo "${CYAN}║${NC}  Secure database proxy for AI-powered analytics   ${CYAN}║${NC}"
-    echo "${CYAN}╚════════════════════════════════════════════════════════╝${NC}"
+    echo  -e "${CYAN}╔════════════════════════════════════════════════════════╗${NC}"
+    echo  -e "${CYAN}║${NC}  ${BOLD}Dabira Agent Installer${NC}                             ${CYAN}║${NC}"
+    echo  -e "${CYAN}║${NC}  Secure database proxy for AI-powered analytics   ${CYAN}║${NC}"
+    echo  -e "${CYAN}╚════════════════════════════════════════════════════════╝${NC}"
     echo ""
 }
 
 print_success() { echo "${GREEN}✓${NC} $1"; }
 print_error() { echo "${RED}✗ Error:${NC} $1" >&2; }
 print_warning() { echo "${YELLOW}⚠ Warning:${NC} $1"; }
-print_info() { echo "${CYAN}ℹ${NC} $1"; }
+print_info() { echo  -e "${CYAN}ℹ${NC} $1"; }
 
 detect_platform() {
     local os arch
@@ -87,17 +99,26 @@ get_latest_version() {
     print_info "Fetching latest version..."
     
     local api_url="${GITHUB_API}/repos/${REPO}/releases/latest"
-    local response
+    local response http_code
     
-    response=$(curl -fsSL "$api_url" 2>&1) || {
-        print_error "Failed to fetch release information"
+    # Get response with HTTP status code
+    response=$(curl -fsSL -w "\n%{http_code}" "$api_url" 2>/dev/null)
+    http_code=$(echo "$response" | tail -n1)
+    response=$(echo "$response" | head -n-1)
+    
+    if [ "$http_code" != "200" ]; then
+        print_error "Failed to fetch release information (HTTP $http_code)"
+        if [ "$http_code" = "403" ]; then
+            print_warning "GitHub API rate limit reached"
+            print_info "Try again in a few minutes or specify version: --version v1.2.0"
+        fi
         exit 1
-    }
+    fi
     
     VERSION=$(echo "$response" | grep '"tag_name":' | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/')
     
     if [ -z "$VERSION" ]; then
-        print_error "Could not determine latest version"
+        print_error "Could not parse version from response"
         exit 1
     fi
     
